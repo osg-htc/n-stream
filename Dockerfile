@@ -1,4 +1,4 @@
-FROM gitlab-registry.cern.ch/linuxsupport/cs9-base:latest
+FROM almalinux/9-base:latest
 
 WORKDIR /usr/src/app
 
