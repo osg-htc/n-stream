@@ -12,6 +12,7 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # the image runs the EL9 system Python (3.9)
     container: almalinux:9
     steps:
