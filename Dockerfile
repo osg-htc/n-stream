@@ -1,4 +1,5 @@
-FROM almalinux/9-base:latest
+# pinned: change it in a PR, together with a new release (see RELEASING.md)
+FROM almalinux/9-base:9.9-20261116
 
 WORKDIR /usr/src/app
 
