@@ -1,0 +1,32 @@
+name: Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # the image runs the EL9 system Python (3.9)
+    container: almalinux:9
+    steps:
+      - name: Install tools
+        run: dnf -y -q install git python3 file
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Python sources parse
+        run: |
+          for f in setup.py $(find nstream -name '*.py') $(grep -l '^#!.*python' bin/*); do
+            python3 -c 'import ast, sys; ast.parse(open(sys.argv[1]).read(), sys.argv[1])' "$f" || exit 1
+          done
+
+      - name: Shell scripts parse
+        run: for f in $(grep -L '^#!.*python' bin/*) post_install.sh; do bash -n "$f" || exit 1; done
