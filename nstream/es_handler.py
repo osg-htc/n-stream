@@ -12,6 +12,8 @@ import nstream
 import nstream.config
 import nstream.settings
 
+PURGE_INTERVAL = 3600  # seconds between purges of the directory queue
+
 log = logging.getLogger('nstream')
 # log.addHandler(logging.NullHandler()) needs py2.7+
 
@@ -78,6 +80,11 @@ def main():
             sys.exit(2)
 
         # dirq processing
+        # QueueSimple.remove() deletes an element but never its (per-minute) intermediate
+        # directory, so emptied directories pile up (161k on psetf by 2026-11) and every
+        # pass lists all of them. purge() removes the empty ones, except the newest, which
+        # writers may still be adding to. The first pass purges, then once an hour.
+        last_purge = 0
         while True:
             count = 0
             events = list()
@@ -114,4 +121,10 @@ def main():
             # call
             b_mod.insert(events, **args)
             log.info("Processed %d messages" % count)
+            if time.time() - last_purge > PURGE_INTERVAL:
+                try:
+                    mq.purge()
+                except Exception as e:
+                    log.warning("Unable to purge %s: %s" % (dirq, e))
+                last_purge = time.time()
             time.sleep(config[handler].get('timeout', 10))
